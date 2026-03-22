@@ -19,7 +19,7 @@ const dummySales = [
 ];
 
 export default function SalesIndex() {
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isFilterOpen, setIsFilterOpen] = useState(false); 
     const [isActionOpen, setIsActionOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<any>(null);
     
