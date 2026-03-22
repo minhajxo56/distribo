@@ -8,16 +8,25 @@ import {
     Receipt, 
     Users,
     Box,
-    AlertCircle
+    AlertCircle,
+    Wallet,
+    LifeBuoy,
+    Settings,
+    Handshake,
+    Crown,
+    User,
+    Calendar,
+    Calculator,
+    StickyNote
 } from 'lucide-react';
 
 export default function Dashboard() {
     // Standardize date and day formatting
     const today = new Date();
-    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' }); // Shortened to save space
-    const dateFormatted = today.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }); // Removed year for compactness
+    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' });
+    const dateFormatted = today.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 
-    // Grid Modules Data - Updated to use Laravel's route() helper mapping to web.php named routes
+    // Grid Modules Data - Updated with new modules
     const modules = [
         { name: 'Order', icon: ShoppingCart, href: route('orders.index'), color: 'text-blue-600' },
         { name: 'Sales', icon: TrendingUp, href: route('sales.index'), color: 'text-green-600' },
@@ -25,18 +34,26 @@ export default function Dashboard() {
         { name: 'Delivery', icon: Truck, href: route('delivery.index'), color: 'text-orange-600' },
         { name: 'Expense', icon: Receipt, href: route('expenses.index'), color: 'text-red-600' },
         { name: 'Employee', icon: Users, href: route('employees.index'), color: 'text-teal-600' },
+        // Newly added modules
+        { name: 'Accounting', icon: Wallet, href: route('accounting.index'), color: 'text-emerald-600' },
+        { name: 'Support', icon: LifeBuoy, href: route('support.index'), color: 'text-rose-600' },
+        { name: 'Settings', icon: Settings, href: route('settings.index'), color: 'text-slate-600' },
+        { name: 'Partners', icon: Handshake, href: route('partners.index'), color: 'text-purple-600' },
+        { name: 'Premium', icon: Crown, href: route('premium.index'), color: 'text-yellow-600' },
+        { name: 'My Account', icon: User, href: route('account.index'), color: 'text-cyan-600' },
+        { name: 'Calendar', icon: Calendar, href: route('calendar.index'), color: 'text-sky-600' },
+        { name: 'Calculator', icon: Calculator, href: route('calculator.index'), color: 'text-fuchsia-600' },
+        { name: 'My Notes', icon: StickyNote, href: route('notes.index'), color: 'text-amber-600' },
     ];
 
-    // Example Notice (In a real app, pass this via props)
     const importantNotice = "Pending deliveries: 12 items require your attention today.";
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
             <Head title="Dashboard - Distribo" />
 
-            {/* COMPACT TOP BAR: h-12 (48px) stays touch-friendly but saves space */}
+            {/* COMPACT TOP BAR */}
             <header className="bg-white border-b border-gray-200 px-3 h-12 flex items-center justify-between shrink-0 sticky top-0 z-10 shadow-sm">
-                {/* Left: Compact Logo & Brand */}
                 <div className="flex items-center gap-2">
                     <div className="bg-blue-600 text-white p-1 rounded-md">
                         <Box size={18} strokeWidth={2.5} />
@@ -44,7 +61,6 @@ export default function Dashboard() {
                     <h1 className="text-lg font-bold text-gray-900 tracking-tight">Distribo</h1>
                 </div>
 
-                {/* Right: Single-line compact Date */}
                 <div className="text-right bg-gray-100 px-2 py-1 rounded-md">
                     <p className="text-xs font-bold text-gray-800">
                         {dayName}, {dateFormatted}
@@ -55,7 +71,7 @@ export default function Dashboard() {
             {/* MAIN CONTENT */}
             <main className="flex-1 p-3 w-full max-w-3xl mx-auto">
                 
-                {/* STATUS / NOTICE SYSTEM: High contrast, prominent, clear language */}
+                {/* STATUS / NOTICE SYSTEM */}
                 {importantNotice && (
                     <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 rounded-r-md flex items-start gap-2 shadow-sm">
                         <AlertCircle size={18} className="text-orange-600 shrink-0 mt-0.5" />
@@ -96,6 +112,8 @@ export default function Dashboard() {
         </div>
     );
 }
+
+// Mock route helper
 function route(name: string, params?: Record<string, any>): string {
     const routes: Record<string, string> = {
         'orders.index': '/orders',
@@ -104,6 +122,16 @@ function route(name: string, params?: Record<string, any>): string {
         'delivery.index': '/delivery',
         'expenses.index': '/expenses',
         'employees.index': '/employees',
+        // New routes mapping
+        'accounting.index': '/accounting',
+        'support.index': '/support',
+        'settings.index': '/settings',
+        'partners.index': '/partners',
+        'premium.index': '/premium',
+        'account.index': '/account',
+        'calendar.index': '/calendar',
+        'calculator.index': '/calculator',
+        'notes.index': '/notes',
     };
 
     let url = routes[name] || '/';
