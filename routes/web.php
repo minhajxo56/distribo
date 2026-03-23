@@ -31,4 +31,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('/notes', 'notes/index')->name('notes.index');
 });
 
-require __DIR__.'/settings.php';

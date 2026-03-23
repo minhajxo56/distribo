@@ -17,7 +17,6 @@ import {
     User,
     Calendar,
     Calculator,
-    StickyNote
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -43,7 +42,6 @@ export default function Dashboard() {
         { name: 'My Account', icon: User, href: route('account.index'), color: 'text-cyan-600' },
         { name: 'Calendar', icon: Calendar, href: route('calendar.index'), color: 'text-sky-600' },
         { name: 'Calculator', icon: Calculator, href: route('calculator.index'), color: 'text-fuchsia-600' },
-        { name: 'My Notes', icon: StickyNote, href: route('notes.index'), color: 'text-amber-600' },
     ];
 
     const importantNotice = "Pending deliveries: 12 items require your attention today.";
@@ -131,7 +129,6 @@ function route(name: string, params?: Record<string, any>): string {
         'account.index': '/account',
         'calendar.index': '/calendar',
         'calculator.index': '/calculator',
-        'notes.index': '/notes',
     };
 
     let url = routes[name] || '/';

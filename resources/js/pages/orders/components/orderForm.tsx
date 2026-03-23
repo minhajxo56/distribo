@@ -1,7 +1,8 @@
 // resources/js/pages/orders/components/orderForm.tsx
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Minus, CheckCircle, ArrowRight, CreditCard, Trash2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Plus, Minus, CheckCircle, ArrowRight, CreditCard, Trash2, AlertCircle, Calculator } from 'lucide-react';
 import BottomBreadcrumb from '../../components/bottomBreadcrumb';
+import CalculatorUtility from '../../components/calculatorUtility'; // Make sure path matches your structure
 
 interface ProductItem {
     id: string;
@@ -28,6 +29,9 @@ const PAYMENT_METHODS = ['Bank', 'bKash', 'Nagad', 'Cash'];
 export default function OrderForm({ isEdit = false, initialData, onClose }: OrderFormProps) {
     // Navigation State
     const [step, setStep] = useState<1 | 2>(1);
+    
+    // Calculator State (Tracks which payment row is using the calculator)
+    const [activeCalcPaymentId, setActiveCalcPaymentId] = useState<number | null>(null);
     
     // Step 1: Products
     const [products, setProducts] = useState<ProductItem[]>([
@@ -117,7 +121,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
         <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col font-sans animate-in slide-in-from-bottom-4 duration-200">
             
             {/* FULL-SCREEN MODAL TOP BAR */}
-            <header className="bg-white border-b border-gray-200 px-3 h-14 flex items-center justify-between shrink-0 shadow-sm">
+            <header className="bg-white border-b border-gray-200 px-3 h-14 flex items-center justify-between shrink-0 shadow-sm z-20">
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={step === 2 ? () => setStep(1) : onClose}
@@ -132,7 +136,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
             </header>
 
             {/* MAIN SCROLLABLE CONTENT */}
-            <main className="flex-1 overflow-y-auto pb-32 w-full max-w-3xl mx-auto">
+            <main className="flex-1 overflow-y-auto pb-32 w-full max-w-3xl mx-auto z-10">
                 
                 {/* STEP 1: ORDER ITEMS */}
                 {step === 1 && (
@@ -222,7 +226,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                         <div className="flex flex-col gap-3 mt-2">
                             {payments.map((payment, index) => (
                                 <div key={payment.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative">
-                                    {/* Remove Button (only if multiple payments exist) */}
+                                    {/* Remove Button */}
                                     {payments.length > 1 && (
                                         <button 
                                             onClick={() => removePayment(payment.id)}
@@ -247,14 +251,24 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                                         </div>
                                         <div className="flex-[1.5]">
                                             <label className="block text-xs font-bold text-gray-700 mb-1">Amount (৳)</label>
-                                            <input 
-                                                type="text" 
-                                                inputMode="numeric"
-                                                placeholder="0"
-                                                value={payment.amount}
-                                                onChange={(e) => updatePayment(payment.id, 'amount', e.target.value.replace(/\D/g, ''))}
-                                                className={`w-full bg-gray-50 border ${isOverpaid ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-lg font-bold rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-600`}
-                                            />
+                                            <div className="relative flex items-center">
+                                                <input 
+                                                    type="text" 
+                                                    inputMode="numeric"
+                                                    placeholder="0"
+                                                    value={payment.amount}
+                                                    onChange={(e) => updatePayment(payment.id, 'amount', e.target.value.replace(/\D/g, ''))}
+                                                    className={`w-full bg-gray-50 border ${isOverpaid ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-lg font-bold rounded-lg pl-3 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-blue-600`}
+                                                />
+                                                {/* Calculator Trigger Button */}
+                                                <button
+                                                    onClick={() => setActiveCalcPaymentId(payment.id)}
+                                                    className="absolute right-2 p-1.5 text-gray-400 active:text-blue-600 active:bg-blue-50 rounded-md transition-colors touch-manipulation"
+                                                    title="Open Calculator"
+                                                >
+                                                    <Calculator size={20} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -288,7 +302,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
             </main>
 
             {/* FIXED BOTTOM ACTION BAR */}
-            <div className="fixed bottom-14 left-0 right-0 p-4 bg-white border-t border-gray-200 z-40">
+            <div className="fixed bottom-14 left-0 right-0 p-4 bg-white border-t border-gray-200 z-30">
                 <div className="max-w-3xl mx-auto w-full">
                     {step === 1 ? (
                         <button
@@ -314,7 +328,22 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
             </div>
 
             {/* DYNAMIC SEMANTIC BREADCRUMB */}
-            <BottomBreadcrumb currentPage={breadcrumbString} />
+            <div className="z-30 relative">
+                <BottomBreadcrumb currentPage={breadcrumbString} />
+            </div>
+
+            {/* CALCULATOR UTILITY OVERLAY */}
+            {activeCalcPaymentId !== null && (
+                <CalculatorUtility 
+                    onClose={() => setActiveCalcPaymentId(null)}
+                    onUseResult={(result) => {
+                        // Round the result to ensure it fits the expected integer input (or adjust if you want decimals)
+                        const roundedResult = Math.round(Number(result)).toString();
+                        updatePayment(activeCalcPaymentId, 'amount', roundedResult);
+                        setActiveCalcPaymentId(null);
+                    }}
+                />
+            )}
         </div>
     );
 }
