@@ -1,142 +1,147 @@
-// resources/js/pages/dashboard.tsx
 import { Head, Link } from '@inertiajs/react';
-import { 
-    ShoppingCart, 
-    TrendingUp, 
-    Package, 
-    Truck, 
-    Receipt, 
-    Users,
-    Box,
-    AlertCircle,
-    Wallet,
-    LifeBuoy,
-    Settings,
-    Handshake,
-    Crown,
-    User,
-    Calendar,
-    Calculator,
-} from 'lucide-react';
+import { ShoppingCart, TrendingUp, Package, Truck, Receipt, Users, Box, AlertCircle, Wallet, LifeBuoy, Settings, Handshake, Crown, User, Calendar, Calculator } from 'lucide-react';
+import { route } from 'ziggy-js';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 export default function Dashboard() {
-    // Standardize date and day formatting
     const today = new Date();
     const dayName = today.toLocaleDateString('en-US', { weekday: 'short' });
     const dateFormatted = today.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 
-    // Grid Modules Data - Updated with new modules
-    const modules = [
-        { name: 'Order', icon: ShoppingCart, href: route('orders.index'), color: 'text-blue-600' },
-        { name: 'Sales', icon: TrendingUp, href: route('sales.index'), color: 'text-green-600' },
-        { name: 'Stock', icon: Package, href: route('inventory.index'), color: 'text-indigo-600' },
-        { name: 'Delivery', icon: Truck, href: route('delivery.index'), color: 'text-orange-600' },
-        { name: 'Expense', icon: Receipt, href: route('expenses.index'), color: 'text-red-600' },
-        { name: 'Employee', icon: Users, href: route('employees.index'), color: 'text-teal-600' },
-        // Newly added modules
-        { name: 'Accounting', icon: Wallet, href: route('accounting.index'), color: 'text-emerald-600' },
-        { name: 'Support', icon: LifeBuoy, href: route('support.index'), color: 'text-rose-600' },
-        { name: 'Settings', icon: Settings, href: route('settings.index'), color: 'text-slate-600' },
-        { name: 'Partners', icon: Handshake, href: route('partners.index'), color: 'text-purple-600' },
-        { name: 'Premium', icon: Crown, href: route('premium.index'), color: 'text-yellow-600' },
-        { name: 'My Account', icon: User, href: route('account.index'), color: 'text-cyan-600' },
-        { name: 'Calendar', icon: Calendar, href: route('calendar.index'), color: 'text-sky-600' },
-        { name: 'Calculator', icon: Calculator, href: route('calculator.index'), color: 'text-fuchsia-600' },
+    const coreModules = [
+        { name: 'Order', icon: ShoppingCart, href: route('orders.index'), color: 'text-blue-600', bg: 'bg-blue-50' },
+        { name: 'Sales', icon: TrendingUp, href: route('sales.index'), color: 'text-green-600', bg: 'bg-green-50' },
+        { name: 'Stock', icon: Package, href: route('inventory.index'), color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { name: 'Delivery', icon: Truck, href: route('delivery.index'), color: 'text-orange-600', bg: 'bg-orange-50' },
+        { name: 'Expense', icon: Receipt, href: route('expenses.index'), color: 'text-red-600', bg: 'bg-red-50' },
+        { name: 'Employee', icon: Users, href: route('employees.index'), color: 'text-teal-600', bg: 'bg-teal-50' },
+        { name: 'Accounting', icon: Wallet, href: route('accounting.index'), color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
+    const additionalModules = [
+        { name: 'Support', icon: LifeBuoy, href: route('support.index'), color: 'text-rose-600', bg: 'bg-rose-50' },
+        { name: 'Settings', icon: Settings, href: route('settings.index'), color: 'text-slate-600', bg: 'bg-slate-50' },
+        { name: 'Partners', icon: Handshake, href: route('partners.index'), color: 'text-purple-600', bg: 'bg-purple-50' },
+        { name: 'Premium', icon: Crown, href: route('premium.index'), color: 'text-yellow-600', bg: 'bg-yellow-50' },
+        { name: 'My Account', icon: User, href: route('account.index'), color: 'text-cyan-600', bg: 'bg-cyan-50' },
+        { name: 'Calendar', icon: Calendar, href: route('calendar.index'), color: 'text-sky-600', bg: 'bg-sky-50' },
+        { name: 'Calculator', icon: Calculator, href: route('calculator.index'), color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
+    ];
+
+    const quickAccess = coreModules.slice(0, 4);
     const importantNotice = "Pending deliveries: 12 items require your attention today.";
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-background flex flex-col font-sans">
             <Head title="Dashboard - Distribo" />
 
-            {/* COMPACT TOP BAR */}
-            <header className="bg-white border-b border-gray-200 px-3 h-12 flex items-center justify-between shrink-0 sticky top-0 z-10 shadow-sm">
+            <header className="bg-card border-b border-border px-4 h-14 flex items-center justify-between shrink-0 sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-2">
-                    <div className="bg-blue-600 text-white p-1 rounded-md">
-                        <Box size={18} strokeWidth={2.5} />
+                    <div className="bg-primary text-primary-foreground p-1.5 rounded-md">
+                        <Box size={20} strokeWidth={2.5} />
                     </div>
-                    <h1 className="text-lg font-bold text-gray-900 tracking-tight">Distribo</h1>
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Distribo</h1>
                 </div>
 
-                <div className="text-right bg-gray-100 px-2 py-1 rounded-md">
-                    <p className="text-xs font-bold text-gray-800">
-                        {dayName}, {dateFormatted}
-                    </p>
-                </div>
+                <Badge variant="secondary" className="font-bold py-1 px-2">
+                    {dayName}, {dateFormatted}
+                </Badge>
             </header>
 
-            {/* MAIN CONTENT */}
-            <main className="flex-1 p-3 w-full max-w-3xl mx-auto">
+            <main className="flex-1 p-4 w-full max-w-4xl mx-auto space-y-8">
                 
-                {/* STATUS / NOTICE SYSTEM */}
                 {importantNotice && (
-                    <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 rounded-r-md flex items-start gap-2 shadow-sm">
-                        <AlertCircle size={18} className="text-orange-600 shrink-0 mt-0.5" />
-                        <p className="text-sm font-semibold text-orange-900 leading-tight">
+                    <Alert className="bg-orange-50 border-orange-200 text-orange-900 shadow-sm">
+                        <AlertCircle className="h-4 w-4 stroke-orange-600" />
+                        <AlertTitle className="text-orange-800 font-semibold">Important Notice</AlertTitle>
+                        <AlertDescription className="text-sm font-medium">
                             {importantNotice}
-                        </p>
-                    </div>
+                        </AlertDescription>
+                    </Alert>
                 )}
 
-                {/* GRID SECTION */}
-                <div>
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 pl-1">
-                        Quick Actions
+                <section>
+                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 pl-1">
+                        Quick Access
                     </h2>
-                    
-                    {/* 3x3 Grid pattern */}
-                    <div className="grid grid-cols-3 gap-3">
-                        {modules.map((mod) => {
+                    <div className="grid grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+                        {quickAccess.map((mod) => {
                             const Icon = mod.icon;
                             return (
-                                <Link
-                                    key={mod.name}
-                                    href={mod.href}
-                                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center aspect-square active:bg-gray-100 active:scale-95 transition-transform duration-75 touch-manipulation"
-                                >
-                                    <div className={`mb-2 p-2.5 rounded-full bg-gray-50 ${mod.color}`}>
-                                        <Icon size={24} strokeWidth={2.5} />
-                                    </div>
-                                    <span className="text-sm font-bold text-gray-800 text-center leading-none">
+                                <Link key={`quick-${mod.name}`} href={mod.href} className="flex flex-col items-center gap-2.5 group">
+                                    <Card className="w-full aspect-square flex items-center justify-center transition-all border-border shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 group-active:scale-95 group-active:translate-y-0 touch-manipulation rounded-2xl">
+                                        <CardContent className="p-0 flex items-center justify-center">
+                                            <div className={`p-3.5 rounded-full ${mod.bg} ${mod.color}`}>
+                                                <Icon className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={2.5} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                                         {mod.name}
                                     </span>
                                 </Link>
                             );
                         })}
                     </div>
-                </div>
+                </section>
+
+                <Separator />
+
+                <section>
+                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 pl-1">
+                        Essentials
+                    </h2>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4 sm:gap-6">
+                        {coreModules.map((mod) => {
+                            const Icon = mod.icon;
+                            return (
+                                <Link key={`core-${mod.name}`} href={mod.href} className="flex flex-col items-center gap-2.5 group">
+                                    <Card className="w-full aspect-square flex items-center justify-center transition-all border-border shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 group-active:scale-95 group-active:translate-y-0 touch-manipulation rounded-2xl">
+                                        <CardContent className="p-0 flex items-center justify-center">
+                                            <div className={`p-3 rounded-full ${mod.bg} ${mod.color}`}>
+                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
+                                        {mod.name}
+                                    </span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                <Separator />
+
+                <section>
+                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 pl-1">
+                        More Options
+                    </h2>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4 sm:gap-6">
+                        {additionalModules.map((mod) => {
+                            const Icon = mod.icon;
+                            return (
+                                <Link key={`add-${mod.name}`} href={mod.href} className="flex flex-col items-center gap-2.5 group">
+                                    <Card className="w-full aspect-square flex items-center justify-center transition-all border-border shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 group-active:scale-95 group-active:translate-y-0 touch-manipulation rounded-2xl">
+                                        <CardContent className="p-0 flex items-center justify-center">
+                                            <div className={`p-3 rounded-full ${mod.bg} ${mod.color}`}>
+                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
+                                        {mod.name}
+                                    </span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </section>
             </main>
         </div>
     );
-}
-
-// Mock route helper
-function route(name: string, params?: Record<string, any>): string {
-    const routes: Record<string, string> = {
-        'orders.index': '/orders',
-        'sales.index': '/sales',
-        'inventory.index': '/inventory',
-        'delivery.index': '/delivery',
-        'expenses.index': '/expenses',
-        'employees.index': '/employees',
-        // New routes mapping
-        'accounting.index': '/accounting',
-        'support.index': '/support',
-        'settings.index': '/settings',
-        'partners.index': '/partners',
-        'premium.index': '/premium',
-        'account.index': '/account',
-        'calendar.index': '/calendar',
-        'calculator.index': '/calculator',
-    };
-
-    let url = routes[name] || '/';
-    
-    if (params) {
-        const query = new URLSearchParams(params).toString();
-        url += query ? `?${query}` : '';
-    }
-    
-    return url;
 }

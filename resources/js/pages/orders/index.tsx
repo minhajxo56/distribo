@@ -1,30 +1,42 @@
 // resources/js/pages/orders/index.tsx
 import { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { Edit, Trash2, CheckCircle, FileText, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 // Reusable UI Components
-import TopIndexBar from '../components/topIndexBar';
+import TopIndexBar from './components/topIndexBar';
 import BottomBreadcrumb from '../components/bottomBreadcrumb';
-import ListItemActions from '../components/listItemActions';
 
 // Module-Specific Components
 import OrderTableFilter from './components/orderTableFilter';
-import OrderListTable from './components/orderListTable';
+import OrderListTable, { Order } from './components/orderListTable';
 import OrderForm from './components/orderForm';
 
-// Dummy Data
-const dummyOrders = [
-    { id: '1042', customer: 'Rahim Store', amount: '12,500', status: 'Pending' as const, date: 'Today, 10:30 AM' },
-    { id: '1041', customer: 'Bhai Bhai Traders', amount: '8,200', status: 'Paid' as const, date: 'Yesterday' },
-    { id: '1040', customer: 'Mayer Doa Enterprise', amount: '45,000', status: 'Paid' as const, date: 'Mar 18' },
+// Updated Dummy Data to match the new screenshot
+const dummyOrders: Order[] = [
+    { 
+        id: '8821', 
+        brand: 'Stark Design Co.',
+        product: 'Architect Chrono V2',
+        status: 'PENDING', 
+        date: 'Oct 24, 2023 · 14:32',
+        delivery: 'Arriving Oct 27'
+    },
+    { 
+        id: '8814', 
+        brand: 'Curated Home',
+        product: 'Artisan Leather Tote',
+        status: 'SHIPPED', 
+        date: 'Oct 18, 2023 · 11:15',
+        delivery: 'Arriving Oct 19'
+    },
 ];
 
 export default function OrdersIndex() {
     // UI States
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [isActionOpen, setIsActionOpen] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     
     // Form Modal States
     const [showOrderForm, setShowOrderForm] = useState(false);
@@ -37,33 +49,41 @@ export default function OrdersIndex() {
         setShowOrderForm(true);
     };
 
-    const handleEditOrder = () => {
-        setIsEditMode(true);
-        setIsActionOpen(false); // Close the bottom sheet
-        setShowOrderForm(true); // Open the form with selectedOrder data
+    // Toggles the accordion state of a card
+    const handleRowClick = (orderId: string) => {
+        setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
     };
 
-    const handleRowClick = (order: any) => {
-        setSelectedOrder(order);
-        setIsActionOpen(true);
+    // Central handler for the inline card actions
+    const handleCardAction = (action: string, order: Order) => {
+        switch (action) {
+            case 'DETAILS':
+                console.log('View Details for:', order.id);
+                break;
+            case 'EDIT':
+                setSelectedOrder(order);
+                setIsEditMode(true);
+                setShowOrderForm(true);
+                break;
+            case 'DRAFT':
+                console.log('Move to Draft:', order.id);
+                break;
+            case 'CANCEL':
+                console.log('Cancel Order:', order.id);
+                break;
+            case 'DELETE':
+                console.log('Delete Order:', order.id);
+                break;
+        }
     };
-
-    // Actions configured for the popup bottom sheet menu
-    const actionItems = [
-        { label: 'View Details', icon: FileText, onClick: () => console.log('View', selectedOrder?.id), type: 'primary' as const },
-        { label: 'Mark as Paid', icon: CheckCircle, onClick: () => console.log('Pay', selectedOrder?.id) },
-        { label: 'Edit Order', icon: Edit, onClick: handleEditOrder },
-        { label: 'Cancel Order', icon: Trash2, onClick: () => console.log('Delete', selectedOrder?.id), type: 'danger' as const },
-    ];
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
             <Head title="Orders - Distribo" />
 
-            {/* TOP BAR: Toggles the filter section */}
+            {/* TOP BAR */}
             <TopIndexBar 
-                title="Orders" 
-                actionLabel="Filter" 
+                title="Order" 
                 onActionClick={() => setIsFilterOpen(!isFilterOpen)} 
                 isFilterActive={isFilterOpen}
             />
@@ -71,45 +91,36 @@ export default function OrdersIndex() {
             {/* MAIN CONTENT AREA */}
             <main className="flex-1 w-full max-w-3xl mx-auto flex flex-col relative">
                 
-                {/* 1. FILTER: Conditionally rendered, slides in from top */}
+                {/* 1. FILTER */}
                 {isFilterOpen && (
                     <div className="animate-in slide-in-from-top-2 duration-200">
                         <OrderTableFilter />
                     </div>
                 )}
                 
-                {/* 2. LIST: The actual order cards */}
+                {/* 2. LIST (Cards have internal action expansion now) */}
                 <OrderListTable 
                     orders={dummyOrders} 
+                    expandedOrderId={expandedOrderId}
                     onRowClick={handleRowClick} 
+                    onAction={handleCardAction}
                 />
             </main>
 
-            {/* EXTENDED FLOATING ACTION BUTTON (FAB) */}
-            {/* Hidden completely when the form is open to prevent background touches */}
+            {/* FLOATING ACTION BUTTON (FAB) */}
             {!showOrderForm && (
                 <button
                     onClick={handleCreateOrder}
-                    className="fixed bottom-20 right-4 bg-blue-600 active:bg-blue-700 text-white px-5 py-3.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-30 touch-manipulation transition-transform active:scale-95 flex items-center gap-2 font-bold text-base"
+                    className="fixed bottom-24 right-5 w-[50px] h-[50px] bg-[#1a1a1a] active:bg-black text-white rounded-[16px] shadow-[0_8px_20px_rgba(0,0,0,0.15)] z-30 touch-manipulation transition-transform active:scale-95 flex items-center justify-center"
                 >
-                    <Plus size={22} strokeWidth={3} />
-                    Create Order
+                    <Plus size={24} strokeWidth={2.5} />
                 </button>
             )}
 
-            {/* ACTION MENU: Bottom sheet for row taps */}
-            <ListItemActions 
-                isOpen={isActionOpen}
-                onClose={() => setIsActionOpen(false)}
-                title={selectedOrder ? `Order #${selectedOrder.id}` : ''}
-                actions={actionItems}
-            />
-
-            {/* GLOBAL BREADCRUMB: Bottom navigation context */}
+            {/* GLOBAL BREADCRUMB */}
             <BottomBreadcrumb currentPage="Orders" />
 
-            {/* FULL-SCREEN MODAL: Create / Edit Order Form */}
-            {/* Rendered at the end so its z-50 completely covers everything else */}
+            {/* FULL-SCREEN MODAL */}
             {showOrderForm && (
                 <OrderForm 
                     isEdit={isEditMode}

@@ -1,14 +1,17 @@
 // resources/js/pages/orders/components/orderForm.tsx
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Minus, CheckCircle, ArrowRight, CreditCard, Trash2, AlertCircle, Calculator } from 'lucide-react';
+import { ChevronLeft, Plus, Minus, CheckCircle, ArrowRight, Trash2, AlertCircle, Calculator, Settings2 } from 'lucide-react';
 import BottomBreadcrumb from '../../components/bottomBreadcrumb';
-import CalculatorUtility from '../../components/calculatorUtility'; // Make sure path matches your structure
+import CalculatorUtility from '../../components/calculatorUtility';
 
 interface ProductItem {
     id: string;
     name: string;
-    price: number;
+    price: number | string; // string allowed for empty input while typing
     quantity: number;
+    unit: string;
+    availableUnits: string[];
+    isCustomizing?: boolean; // UI state for the secondary options
 }
 
 interface PaymentEntry {
@@ -30,16 +33,33 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
     // Navigation State
     const [step, setStep] = useState<1 | 2>(1);
     
-    // Calculator State (Tracks which payment row is using the calculator)
+    // Calculator State
     const [activeCalcPaymentId, setActiveCalcPaymentId] = useState<number | null>(null);
     
-    // Step 1: Products
+    // Step 1: Products (Updated with Unit and Customizing state)
     const [products, setProducts] = useState<ProductItem[]>([
-        { id: '1', name: 'Cement Bag (50kg)', price: 520, quantity: initialData ? 100 : 0 },
-        { id: '2', name: 'Steel Rod (500W)', price: 75000, quantity: initialData ? 2 : 0 },
+        { 
+            id: '1', 
+            name: 'Artisan Ceramic Mug', 
+            price: 520, 
+            quantity: initialData ? 12 : 0,
+            unit: 'Pieces',
+            availableUnits: ['Pieces', '1 Box of 24 pieces', '1 Carton (48 pieces)'],
+            isCustomizing: false
+        },
+        { 
+            id: '2', 
+            name: 'Premium Leather Tote', 
+            price: 8500, 
+            quantity: initialData ? 2 : 0,
+            unit: 'Pieces',
+            availableUnits: ['Pieces', 'Bundle of 5'],
+            isCustomizing: false
+        },
     ]);
 
-    const totalAmount = products.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Calculate totals factoring in potentially edited prices
+    const totalAmount = products.reduce((sum, item) => sum + ((Number(item.price) || 0) * item.quantity), 0);
     const totalItems = products.reduce((sum, item) => sum + item.quantity, 0);
 
     // Step 2: Payments
@@ -72,9 +92,12 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
         }));
     };
 
+    const updateProduct = (id: string, field: keyof ProductItem, value: any) => {
+        setProducts(products.map(p => p.id === id ? { ...p, [field]: value } : p));
+    };
+
     const handleFullPaidToggle = () => {
         if (!isFullPaid) {
-            // Set single payment to total amount
             setPayments([{ 
                 id: Date.now(), 
                 method: payments[0]?.method || 'Cash', 
@@ -83,7 +106,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
             }]);
             setIsFullPaid(true);
         } else {
-            // Clear payments
             setPayments([{ id: Date.now(), method: 'Cash', amount: '', reference: '' }]);
             setIsFullPaid(false);
         }
@@ -106,21 +128,18 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
     };
 
     const handleComplete = () => {
-        if (isOverpaid) return; // Prevent submission
+        if (isOverpaid) return; 
         console.log("Order Saved!", { products, payments, totalAmount, totalPaid, dueAmount });
         onClose();
     };
 
-    // Breadcrumb logic mapping
-    const moduleName = "Orders";
     const actionName = isEdit ? "Edit Order" : "Create Order";
-    const stepName = step === 1 ? "Items" : "Payment";
-    const breadcrumbString = `${moduleName} > ${actionName} > ${stepName}`;
+    const breadcrumbString = `Orders > ${actionName} > ${step === 1 ? "Items" : "Payment"}`;
 
     return (
         <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col font-sans animate-in slide-in-from-bottom-4 duration-200">
             
-            {/* FULL-SCREEN MODAL TOP BAR */}
+            {/* TOP BAR */}
             <header className="bg-white border-b border-gray-200 px-3 h-14 flex items-center justify-between shrink-0 shadow-sm z-20">
                 <div className="flex items-center gap-2">
                     <button 
@@ -135,7 +154,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                 </div>
             </header>
 
-            {/* MAIN SCROLLABLE CONTENT */}
+            {/* MAIN CONTENT */}
             <main className="flex-1 overflow-y-auto pb-32 w-full max-w-3xl mx-auto z-10">
                 
                 {/* STEP 1: ORDER ITEMS */}
@@ -143,33 +162,85 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                     <div className="p-4 flex flex-col gap-4">
                         <div className="flex flex-col gap-3">
                             {products.map(product => (
-                                <div key={product.id} className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-gray-900 text-base mb-1">{product.name}</h3>
-                                        <p className="text-sm font-bold text-gray-500">৳{product.price.toLocaleString()} / unit</p>
-                                    </div>
-                                    <div className="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-1">
-                                        <button 
-                                            onClick={() => updateQuantity(product.id, -1)}
-                                            disabled={product.quantity === 0}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-md active:bg-gray-100 disabled:opacity-50 touch-manipulation"
-                                        >
-                                            <Minus size={20} strokeWidth={3} className={product.quantity === 0 ? "text-gray-300" : "text-red-600"} />
-                                        </button>
-                                        <span className="w-6 text-center font-bold text-lg text-gray-900">
-                                            {product.quantity}
-                                        </span>
-                                        <button 
-                                            onClick={() => updateQuantity(product.id, 1)}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-md active:bg-gray-100 touch-manipulation"
-                                        >
-                                            <Plus size={20} strokeWidth={3} className="text-blue-600" />
-                                        </button>
+                                <div key={product.id} className="bg-[#121212] border-b border-[#2a2a2a] p-5 pb-6">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 pr-4">
+                                            <h3 className="font-medium text-white text-[15px] mb-1 leading-snug">{product.name}</h3>
+                                            
+                                            {/* Primary Info */}
+                                            <div className="flex items-center gap-1.5 mb-3">
+                                                <span className="text-[14px] text-gray-300 font-bold">৳{Number(product.price).toLocaleString()}</span>
+                                                <span className="text-[13px] text-[#9aa0a6]">/ {product.unit}</span>
+                                            </div>
+                                            
+                                            {/* Secondary Option Toggle */}
+                                            <button 
+                                                onClick={() => updateProduct(product.id, 'isCustomizing', !product.isCustomizing)}
+                                                className="text-[12px] text-blue-400 active:text-blue-300 font-medium flex items-center gap-1.5 transition-colors touch-manipulation w-fit"
+                                            >
+                                                <Settings2 size={12} />
+                                                {product.isCustomizing ? 'Hide Options' : 'Edit Unit & Price'}
+                                            </button>
+                                            
+                                            {/* Secondary Settings (Expandable) */}
+                                            {product.isCustomizing && (
+                                                <div className="mt-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-1 duration-200 bg-[#1a1a1a] p-3.5 rounded-xl border border-[#3c4043]">
+                                                    {/* Unit Dropdown */}
+                                                    <div>
+                                                        <label className="block text-[10px] uppercase tracking-wider text-[#9aa0a6] mb-1.5 font-bold">Unit Type</label>
+                                                        <select 
+                                                            value={product.unit}
+                                                            onChange={(e) => updateProduct(product.id, 'unit', e.target.value)}
+                                                            className="w-full bg-[#202124] border border-[#3c4043] text-white text-sm rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors"
+                                                        >
+                                                            {product.availableUnits.map(u => (
+                                                                <option key={u} value={u}>{u}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    {/* Price Override */}
+                                                    <div>
+                                                        <label className="block text-[10px] uppercase tracking-wider text-[#9aa0a6] mb-1.5 font-bold">Custom Selling Price (৳)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            inputMode="numeric"
+                                                            value={product.price}
+                                                            onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
+                                                            className="w-full bg-[#202124] border border-[#3c4043] text-white text-sm rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors"
+                                                            placeholder="Enter price"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Quantity Selector */}
+                                        <div className="flex items-center border border-[#3c4043] rounded-lg overflow-hidden h-9 mt-0.5 shrink-0">
+                                            <div className="px-3 min-w-[40px] text-center text-[15px] font-medium text-white flex items-center justify-center">
+                                                {product.quantity}
+                                            </div>
+                                            <div className="flex border-l border-[#3c4043]">
+                                                <button 
+                                                    onClick={() => updateQuantity(product.id, -1)}
+                                                    className="w-9 h-full flex items-center justify-center bg-transparent active:bg-[#202124] transition-colors border-r border-[#3c4043] touch-manipulation"
+                                                >
+                                                    <Minus size={16} strokeWidth={2} className="text-white" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => updateQuantity(product.id, 1)}
+                                                    className="w-9 h-full flex items-center justify-center bg-transparent active:bg-[#202124] transition-colors touch-manipulation"
+                                                >
+                                                    <Plus size={16} strokeWidth={2} className="text-white" />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
+                        {/* Totals Summary Card */}
                         <div className="bg-gray-900 text-white p-4 rounded-xl mt-2 flex justify-between items-center shadow-md">
                             <div>
                                 <p className="text-sm text-gray-300 font-bold mb-0.5">Total Amount</p>
@@ -186,7 +257,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                 {/* STEP 2: ADVANCE PAYMENT / SPLIT PAYMENT */}
                 {step === 2 && (
                     <div className="p-4 flex flex-col gap-4">
-                        
                         {/* Summary Dashboard */}
                         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm grid grid-cols-2 gap-4">
                             <div>
@@ -226,11 +296,10 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                         <div className="flex flex-col gap-3 mt-2">
                             {payments.map((payment, index) => (
                                 <div key={payment.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative">
-                                    {/* Remove Button */}
                                     {payments.length > 1 && (
                                         <button 
                                             onClick={() => removePayment(payment.id)}
-                                            className="absolute top-3 right-3 p-2 bg-red-50 text-red-600 rounded-lg active:bg-red-100"
+                                            className="absolute top-3 right-3 p-2 bg-red-50 text-red-600 rounded-lg active:bg-red-100 touch-manipulation"
                                         >
                                             <Trash2 size={16} strokeWidth={2.5} />
                                         </button>
@@ -260,7 +329,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                                                     onChange={(e) => updatePayment(payment.id, 'amount', e.target.value.replace(/\D/g, ''))}
                                                     className={`w-full bg-gray-50 border ${isOverpaid ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-lg font-bold rounded-lg pl-3 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-blue-600`}
                                                 />
-                                                {/* Calculator Trigger Button */}
                                                 <button
                                                     onClick={() => setActiveCalcPaymentId(payment.id)}
                                                     className="absolute right-2 p-1.5 text-gray-400 active:text-blue-600 active:bg-blue-50 rounded-md transition-colors touch-manipulation"
@@ -308,7 +376,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                         <button
                             onClick={() => setStep(2)}
                             disabled={totalItems === 0}
-                            className="w-full py-4 bg-blue-600 active:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 touch-manipulation shadow-md"
+                            className="w-full py-4 bg-blue-600 active:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 touch-manipulation shadow-md transition-colors"
                         >
                             Next: Payment <ArrowRight size={20} strokeWidth={3} />
                         </button>
@@ -337,7 +405,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                 <CalculatorUtility 
                     onClose={() => setActiveCalcPaymentId(null)}
                     onUseResult={(result) => {
-                        // Round the result to ensure it fits the expected integer input (or adjust if you want decimals)
                         const roundedResult = Math.round(Number(result)).toString();
                         updatePayment(activeCalcPaymentId, 'amount', roundedResult);
                         setActiveCalcPaymentId(null);

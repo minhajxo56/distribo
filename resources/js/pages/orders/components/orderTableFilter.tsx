@@ -1,6 +1,6 @@
 // resources/js/pages/orders/components/orderTableFilter.tsx
 import { useState } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Calendar, Check } from 'lucide-react';
 
 const MORE_STATUS_OPTIONS = ['Processing', 'Refunded', 'Failed'];
 const MORE_DATE_OPTIONS = ['Last Month', 'Last 3 Months', 'This Year'];
@@ -9,7 +9,7 @@ export default function OrderTableFilter() {
     // Filter States
     const [orderNumber, setOrderNumber] = useState('');
     const [activeStatus, setActiveStatus] = useState('Pending');
-    const [activeDate, setActiveDate] = useState('Today');
+    const [activeDate, setActiveDate] = useState('This Month');
     
     // Dropdown States
     const [openDropdown, setOpenDropdown] = useState<'status' | 'date' | null>(null);
@@ -28,7 +28,7 @@ export default function OrderTableFilter() {
         setOpenDropdown(null);
     };
 
-    // Reusable Dropdown Component for identical behavior
+    // Reusable Dropdown Component
     const MoreDropdown = ({ 
         type, 
         options, 
@@ -44,17 +44,16 @@ export default function OrderTableFilter() {
         
         return (
             <>
-                {/* Invisible backdrop to close dropdown when tapping outside */}
                 <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
-                <div className="absolute top-full mt-1 right-0 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
+                <div className="absolute top-full mt-2 left-0 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
                     {options.map((option) => (
                         <button
                             key={option}
                             onClick={() => onSelect(option)}
-                            className="w-full text-left px-4 py-3 text-sm font-bold text-gray-800 border-b border-gray-100 last:border-0 active:bg-blue-50 flex items-center justify-between"
+                            className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between"
                         >
                             {option}
-                            {currentValue === option && <Check size={16} className="text-blue-600" strokeWidth={3} />}
+                            {currentValue === option && <Check size={16} className="text-gray-800" />}
                         </button>
                     ))}
                 </div>
@@ -63,87 +62,81 @@ export default function OrderTableFilter() {
     };
 
     return (
-        <div className="bg-white p-3 border-b border-gray-200 flex flex-col gap-4 shadow-sm relative z-10">
+        <div className="bg-[#f8f9fa] p-5 pb-6 border-b border-gray-200 flex flex-col gap-8 relative z-10">
             
             {/* 1. Order Number Search Cell */}
             <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 pl-1">
-                    Order Number
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">
+                    Search by order number
                 </label>
-                <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
-                    <div className="bg-gray-200 px-3 py-3 flex items-center justify-center border-r border-gray-300">
-                        <span className="text-sm font-bold text-gray-700">ORDER-</span>
-                    </div>
+                <div className="flex items-center bg-[#f1f3f5] rounded-md px-4 py-3 w-[220px]">
                     <input 
                         type="text" 
                         maxLength={4} 
                         inputMode="numeric"
-                        placeholder="0000"
+                        placeholder="Last 4 digits"
                         value={orderNumber}
-                        onChange={(e) => setOrderNumber(e.target.value.replace(/\D/g, ''))} // strictly numbers
-                        className="flex-1 w-full px-3 py-3 bg-transparent border-none outline-none font-bold text-gray-900 text-base placeholder-gray-400"
+                        onChange={(e) => setOrderNumber(e.target.value.replace(/\D/g, ''))}
+                        className="flex-1 bg-transparent border-none outline-none font-medium text-gray-800 text-sm placeholder-gray-400"
                     />
+                    <span className="text-gray-400 text-lg font-normal leading-none ml-2">#</span>
                 </div>
             </div>
 
             {/* 2. Status Segmented Buttons */}
             <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 pl-1">
-                    Status
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">
+                    Select order status
                 </label>
-                <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 relative">
+                <div className="flex flex-wrap gap-3">
                     {['Received', 'Pending', 'Cancel'].map((status) => (
                         <button
                             key={status}
                             onClick={() => selectStatus(status)}
-                            className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-md transition-colors touch-manipulation ${
+                            className={`px-5 py-2.5 text-sm font-medium rounded-md transition-colors touch-manipulation ${
                                 activeStatus === status 
-                                    ? 'bg-white text-blue-700 shadow-sm border border-gray-200/50' 
-                                    : 'text-gray-600 active:bg-gray-200'
+                                    ? 'bg-[#5f6368] text-white' 
+                                    : 'bg-white text-gray-600 shadow-sm'
                             }`}
                         >
                             {status}
                         </button>
                     ))}
+                </div>
+                
+                {/* Status More Button */}
+                <div className="relative inline-block mt-3">
+                    <button
+                        onClick={() => toggleDropdown('status')}
+                        className="flex items-center gap-1.5 py-2 text-sm font-medium text-gray-600 transition-colors touch-manipulation"
+                    >
+                        {MORE_STATUS_OPTIONS.includes(activeStatus) ? activeStatus : 'More'}
+                        <ChevronDown size={14} strokeWidth={2} />
+                    </button>
                     
-                    {/* Status More Button */}
-                    <div className="flex-1 relative flex">
-                        <button
-                            onClick={() => toggleDropdown('status')}
-                            className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs sm:text-sm font-bold rounded-md transition-colors touch-manipulation ${
-                                MORE_STATUS_OPTIONS.includes(activeStatus) || openDropdown === 'status'
-                                    ? 'bg-white text-blue-700 shadow-sm border border-gray-200/50' 
-                                    : 'text-gray-600 active:bg-gray-200'
-                            }`}
-                        >
-                            {MORE_STATUS_OPTIONS.includes(activeStatus) ? activeStatus : 'More'}
-                            <ChevronDown size={14} strokeWidth={3} />
-                        </button>
-                        
-                        <MoreDropdown 
-                            type="status" 
-                            options={MORE_STATUS_OPTIONS} 
-                            currentValue={activeStatus} 
-                            onSelect={selectStatus} 
-                        />
-                    </div>
+                    <MoreDropdown 
+                        type="status" 
+                        options={MORE_STATUS_OPTIONS} 
+                        currentValue={activeStatus} 
+                        onSelect={selectStatus} 
+                    />
                 </div>
             </div>
 
             {/* 3. Date Pill Buttons */}
             <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 pl-1">
-                    Date Range
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">
+                    Select date range
                 </label>
-                <div className="flex flex-wrap gap-2 relative">
+                <div className="flex flex-wrap items-center gap-3 relative">
                     {['Today', 'Yesterday', 'Last 7 Days', 'This Month'].map((date) => (
                         <button
                             key={date}
                             onClick={() => selectDate(date)}
-                            className={`px-3.5 py-2 rounded-full text-sm font-bold border transition-colors touch-manipulation ${
+                            className={`px-5 py-2.5 rounded-[14px] text-sm font-medium transition-colors touch-manipulation ${
                                 activeDate === date
-                                    ? 'bg-blue-50 border-blue-600 text-blue-700'
-                                    : 'bg-white border-gray-300 text-gray-700 active:bg-gray-100'
+                                    ? 'bg-[#5f6368] text-white'
+                                    : 'bg-white text-gray-600 shadow-sm'
                             }`}
                         >
                             {date}
@@ -151,17 +144,13 @@ export default function OrderTableFilter() {
                     ))}
 
                     {/* Date More Button */}
-                    <div className="relative inline-block">
+                    <div className="relative inline-block ml-1">
                         <button
                             onClick={() => toggleDropdown('date')}
-                            className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-bold border transition-colors touch-manipulation ${
-                                MORE_DATE_OPTIONS.includes(activeDate) || openDropdown === 'date'
-                                    ? 'bg-blue-50 border-blue-600 text-blue-700'
-                                    : 'bg-white border-gray-300 text-gray-700 active:bg-gray-100'
-                            }`}
+                            className="flex items-center gap-1.5 px-2 py-2 text-sm font-medium text-gray-600 transition-colors touch-manipulation"
                         >
                             {MORE_DATE_OPTIONS.includes(activeDate) ? activeDate : 'More'}
-                            <ChevronDown size={16} strokeWidth={2.5} />
+                            <Calendar size={15} strokeWidth={2} className="text-gray-500" />
                         </button>
                         
                         <MoreDropdown 

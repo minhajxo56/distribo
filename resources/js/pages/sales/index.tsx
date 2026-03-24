@@ -1,7 +1,7 @@
 // resources/js/pages/sales/index.tsx
 import { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { Edit, Trash2, CheckCircle, FileText, Plus } from 'lucide-react';
+import { Edit, Trash2, CheckCircle, FileText, Plus } from 'lucide-react'; 
 
 import TopIndexBar from '../components/topIndexBar';
 import BottomBreadcrumb from '../components/bottomBreadcrumb';

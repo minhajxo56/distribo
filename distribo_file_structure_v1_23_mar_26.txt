@@ -1,0 +1,103 @@
+distribo/resources/js/pages$ tree
+.
+├── account
+│   ├── components
+│   │   ├── changePasswordForm.tsx
+│   │   ├── documentManager.tsx
+│   │   └── editProfileForm.tsx
+│   └── index.tsx
+├── accounting
+│   ├── components
+│   │   ├── accountingDashboard.tsx
+│   │   ├── addAccountForm.tsx
+│   │   ├── balanceSheetView.tsx
+│   │   ├── exportLedgerForm.tsx
+│   │   ├── journalEntryForm.tsx
+│   │   └── transferForm.tsx
+│   └── index.tsx
+├── auth
+│   ├── confirm-password.tsx
+│   ├── forgot-password.tsx
+│   ├── login.tsx
+│   ├── register.tsx
+│   ├── reset-password.tsx
+│   ├── two-factor-challenge.tsx
+│   └── verify-email.tsx
+├── calculator
+│   └── index.tsx
+├── calendar
+│   ├── components
+│   │   ├── agendaForm.tsx
+│   │   ├── calendarFilter.tsx
+│   │   └── calendarSettings.tsx
+│   └── index.tsx
+├── components
+│   ├── bottomBreadcrumb.tsx
+│   ├── calculatorUtility.tsx
+│   ├── listItemActions.tsx
+│   └── topIndexBar.tsx
+├── dashboard_del.tsx
+├── dashboard.tsx
+├── delivery
+│   ├── components
+│   │   ├── createTripForm.tsx
+│   │   ├── deliveryFilter.tsx
+│   │   ├── deliveryList.tsx
+│   │   ├── executeDeliveryForm.tsx
+│   │   ├── manageFleet.tsx
+│   │   └── viewTripDetails.tsx
+│   └── index.tsx
+├── employees
+│   ├── components
+│   │   ├── attendanceView.tsx
+│   │   ├── employeeFilter.tsx
+│   │   ├── employeeForm.tsx
+│   │   ├── employeeList.tsx
+│   │   ├── employeeProfile.tsx
+│   │   ├── payrollView.tsx
+│   │   └── processPayrollForm.tsx
+│   └── index.tsx
+├── expenses
+│   ├── components
+│   │   ├── expenseFilter.tsx
+│   │   ├── expenseForm.tsx
+│   │   ├── expenseList.tsx
+│   │   └── expenseReports.tsx
+│   └── index.tsx
+├── inventory
+│   ├── components
+│   │   ├── inventoryFilter.tsx
+│   │   ├── inventoryList.tsx
+│   │   ├── manualAddStockForm.tsx
+│   │   └── receiveOrderForm.tsx
+│   └── index.tsx
+├── orders
+│   ├── components
+│   │   ├── orderForm.tsx
+│   │   ├── orderListTable.tsx
+│   │   └── orderTableFilter.tsx
+│   └── index.tsx
+├── partners
+│   ├── components
+│   │   ├── partnerFilter.tsx
+│   │   ├── partnerForm.tsx
+│   │   ├── partnerList.tsx
+│   │   └── partnerProfile.tsx
+│   └── index.tsx
+├── premium
+│   ├── components
+│   │   └── subscriptionFlow.tsx
+│   └── index.tsx
+├── sales
+│   ├── components
+│   │   ├── saleForm.tsx
+│   │   ├── saleListTable.tsx
+│   │   └── saleTableFilter.tsx
+│   └── index.tsx
+├── settings
+│   └── index.tsx
+└── support
+    ├── components
+    │   └── supportRequestForm.tsx
+    └── index.tsx
+
