@@ -1,7 +1,7 @@
 // resources/js/pages/orders/index.tsx
 import { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 // Reusable UI Components
 import TopIndexBar from './components/topIndexBar';
@@ -107,14 +107,29 @@ export default function OrdersIndex() {
                 />
             </main>
 
-            {/* FLOATING ACTION BUTTON (FAB) */}
-            {!showOrderForm && (
-                <button
-                    onClick={handleCreateOrder}
-                    className="fixed bottom-24 right-5 w-[50px] h-[50px] bg-[#1a1a1a] active:bg-black text-white rounded-[16px] shadow-[0_8px_20px_rgba(0,0,0,0.15)] z-30 touch-manipulation transition-transform active:scale-95 flex items-center justify-center"
-                >
-                    <Plus size={24} strokeWidth={2.5} />
-                </button>
+{!showOrderForm && (
+                <div className="fixed bottom-16 right-4 flex items-center z-40 touch-manipulation transition-transform active:scale-[0.98]">
+                    <div className="flex bg-white/95 backdrop-blur-md border border-gray-200 rounded-[14px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden">
+                        
+                        {/* Back / Navigation Control (Left Edge) */}
+                        <button
+                            onClick={() => window.history.back()} // Replace with your router back navigation
+                            className="h-[42px] w-[42px] flex items-center justify-center text-slate-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-r border-gray-200"
+                            aria-label="Back"
+                        >
+                            <ChevronLeft size={20} strokeWidth={2.5} />
+                        </button>
+
+                        {/* Create Action (Right Edge) */}
+                        <button
+                            onClick={handleCreateOrder}
+                            className="h-[42px] pl-4 pr-3 flex items-center justify-center gap-1.5 font-bold text-[14px] text-blue-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        >
+                            Create
+                            <ChevronRight size={18} strokeWidth={2.5} className="text-slate-600" />
+                        </button>
+                    </div>
+                </div>
             )}
 
             {/* GLOBAL BREADCRUMB */}

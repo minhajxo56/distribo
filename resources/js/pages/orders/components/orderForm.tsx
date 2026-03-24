@@ -1,17 +1,17 @@
 // resources/js/pages/orders/components/orderForm.tsx
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Minus, CheckCircle, ArrowRight, Trash2, AlertCircle, Calculator, Settings2 } from 'lucide-react';
+import { Plus, Minus, CheckCircle, ChevronLeft, ChevronRight, Trash2, AlertCircle, Calculator, Pencil, MoreVertical, Save } from 'lucide-react';
 import BottomBreadcrumb from '../../components/bottomBreadcrumb';
-import CalculatorUtility from '../../components/calculatorUtility';
+import CalculatorUtility from '../../components/calculatorUtility'; 
 
 interface ProductItem {
     id: string;
     name: string;
-    price: number | string; // string allowed for empty input while typing
+    price: number | string;
     quantity: number;
     unit: string;
     availableUnits: string[];
-    isCustomizing?: boolean; // UI state for the secondary options
+    isEditingPrice?: boolean; 
 }
 
 interface PaymentEntry {
@@ -30,22 +30,21 @@ interface OrderFormProps {
 const PAYMENT_METHODS = ['Bank', 'bKash', 'Nagad', 'Cash'];
 
 export default function OrderForm({ isEdit = false, initialData, onClose }: OrderFormProps) {
-    // Navigation State
-    const [step, setStep] = useState<1 | 2>(1);
-    
-    // Calculator State
+    // Navigation & Modal States
+    const [step, setStep] = useState<1 | 2 | 3>(1);
     const [activeCalcPaymentId, setActiveCalcPaymentId] = useState<number | null>(null);
+    const [isTopMenuOpen, setIsTopMenuOpen] = useState(false);
     
-    // Step 1: Products (Updated with Unit and Customizing state)
+    // Step 1: Products
     const [products, setProducts] = useState<ProductItem[]>([
         { 
             id: '1', 
             name: 'Artisan Ceramic Mug', 
-            price: 520, 
-            quantity: initialData ? 12 : 0,
+            price: 1000, 
+            quantity: initialData ? 12 : 1,
             unit: 'Pieces',
-            availableUnits: ['Pieces', '1 Box of 24 pieces', '1 Carton (48 pieces)'],
-            isCustomizing: false
+            availableUnits: ['Pieces', 'Box of 24', 'Carton (48)'],
+            isEditingPrice: false
         },
         { 
             id: '2', 
@@ -54,26 +53,23 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
             quantity: initialData ? 2 : 0,
             unit: 'Pieces',
             availableUnits: ['Pieces', 'Bundle of 5'],
-            isCustomizing: false
+            isEditingPrice: false
         },
     ]);
 
-    // Calculate totals factoring in potentially edited prices
     const totalAmount = products.reduce((sum, item) => sum + ((Number(item.price) || 0) * item.quantity), 0);
     const totalItems = products.reduce((sum, item) => sum + item.quantity, 0);
 
-    // Step 2: Payments
+    // Payments
     const [isFullPaid, setIsFullPaid] = useState(false);
     const [payments, setPayments] = useState<PaymentEntry[]>([
         { id: Date.now(), method: 'bKash', amount: '', reference: '' }
     ]);
 
-    // Derived Payment State
     const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
     const dueAmount = totalAmount - totalPaid;
     const isOverpaid = totalPaid > totalAmount;
 
-    // Auto-sync "Full Paid" toggle if manual entries equal total
     useEffect(() => {
         if (totalPaid === totalAmount && totalAmount > 0) {
             setIsFullPaid(true);
@@ -98,12 +94,7 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
 
     const handleFullPaidToggle = () => {
         if (!isFullPaid) {
-            setPayments([{ 
-                id: Date.now(), 
-                method: payments[0]?.method || 'Cash', 
-                amount: totalAmount.toString(), 
-                reference: '' 
-            }]);
+            setPayments([{ id: Date.now(), method: payments[0]?.method || 'Cash', amount: totalAmount.toString(), reference: '' }]);
             setIsFullPaid(true);
         } else {
             setPayments([{ id: Date.now(), method: 'Cash', amount: '', reference: '' }]);
@@ -134,130 +125,190 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
     };
 
     const actionName = isEdit ? "Edit Order" : "Create Order";
-    const breadcrumbString = `Orders > ${actionName} > ${step === 1 ? "Items" : "Payment"}`;
+    const getStepName = () => {
+        if (step === 1) return "Items";
+        if (step === 2) return "Summary";
+        return "Payment";
+    };
+    const breadcrumbString = `Orders > ${actionName} > ${getStepName()}`;
 
     return (
         <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col font-sans animate-in slide-in-from-bottom-4 duration-200">
             
             {/* TOP BAR */}
-            <header className="bg-white border-b border-gray-200 px-3 h-14 flex items-center justify-between shrink-0 shadow-sm z-20">
-                <div className="flex items-center gap-2">
+            <header className="bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between shrink-0 shadow-sm z-30 relative">
+                <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">
+                    {actionName}
+                </h1>
+
+                {/* Top Right Menu */}
+                <div className="relative">
                     <button 
-                        onClick={step === 2 ? () => setStep(1) : onClose}
-                        className="p-2 -ml-2 text-gray-500 active:bg-gray-100 rounded-full touch-manipulation"
+                        onClick={() => setIsTopMenuOpen(!isTopMenuOpen)}
+                        className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-colors touch-manipulation"
+                        aria-label="More options"
                     >
-                        <ChevronLeft size={24} strokeWidth={2.5} />
+                        <MoreVertical size={20} strokeWidth={2.5} />
                     </button>
-                    <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                        {actionName}
-                    </h1>
+
+                    {/* Dropdown Menu */}
+                    {isTopMenuOpen && (
+                        <>
+                            {/* Invisible backdrop */}
+                            <div className="fixed inset-0 z-40" onClick={() => setIsTopMenuOpen(false)} />
+                            
+                            <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-100 rounded-[14px] shadow-[0_4px_24px_rgba(0,0,0,0.12)] z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                <button 
+                                    onClick={() => { 
+                                        console.log('Saved as Draft'); 
+                                        setIsTopMenuOpen(false); 
+                                        onClose(); 
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-gray-700 active:bg-gray-50 text-left font-medium transition-colors border-b border-gray-100"
+                                >
+                                    <Save size={18} className="text-gray-500" strokeWidth={2} />
+                                    Save as Draft
+                                </button>
+                                
+                                <button 
+                                    onClick={() => { 
+                                        console.log('Order Cancelled'); 
+                                        setIsTopMenuOpen(false); 
+                                        onClose(); 
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-red-600 active:bg-red-50 text-left font-medium transition-colors"
+                                >
+                                    <Trash2 size={18} className="text-red-500" strokeWidth={2} />
+                                    Cancel Order
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </header>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 overflow-y-auto pb-32 w-full max-w-3xl mx-auto z-10">
+            <main className="flex-1 overflow-y-auto pb-32 w-full max-w-3xl mx-auto z-10 relative">
                 
                 {/* STEP 1: ORDER ITEMS */}
                 {step === 1 && (
                     <div className="p-4 flex flex-col gap-4">
                         <div className="flex flex-col gap-3">
                             {products.map(product => (
-                                <div key={product.id} className="bg-[#121212] border-b border-[#2a2a2a] p-5 pb-6">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1 pr-4">
-                                            <h3 className="font-medium text-white text-[15px] mb-1 leading-snug">{product.name}</h3>
-                                            
-                                            {/* Primary Info */}
-                                            <div className="flex items-center gap-1.5 mb-3">
-                                                <span className="text-[14px] text-gray-300 font-bold">৳{Number(product.price).toLocaleString()}</span>
-                                                <span className="text-[13px] text-[#9aa0a6]">/ {product.unit}</span>
+                                <div key={product.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                                    
+                                    <h3 className="font-semibold text-gray-900 text-[16px] leading-snug">
+                                        {product.name}
+                                    </h3>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        {product.isEditingPrice ? (
+                                            <div className="flex items-center gap-1 bg-gray-50 border border-blue-500 rounded-lg px-2 py-1 h-8">
+                                                <span className="text-gray-900 font-bold text-[15px]">৳</span>
+                                                <input 
+                                                    type="number" 
+                                                    inputMode="numeric"
+                                                    value={product.price}
+                                                    onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
+                                                    onBlur={() => updateProduct(product.id, 'isEditingPrice', false)}
+                                                    autoFocus
+                                                    className="w-16 bg-transparent text-gray-900 font-bold text-[15px] outline-none"
+                                                />
                                             </div>
-                                            
-                                            {/* Secondary Option Toggle */}
-                                            <button 
-                                                onClick={() => updateProduct(product.id, 'isCustomizing', !product.isCustomizing)}
-                                                className="text-[12px] text-blue-400 active:text-blue-300 font-medium flex items-center gap-1.5 transition-colors touch-manipulation w-fit"
-                                            >
-                                                <Settings2 size={12} />
-                                                {product.isCustomizing ? 'Hide Options' : 'Edit Unit & Price'}
-                                            </button>
-                                            
-                                            {/* Secondary Settings (Expandable) */}
-                                            {product.isCustomizing && (
-                                                <div className="mt-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-1 duration-200 bg-[#1a1a1a] p-3.5 rounded-xl border border-[#3c4043]">
-                                                    {/* Unit Dropdown */}
-                                                    <div>
-                                                        <label className="block text-[10px] uppercase tracking-wider text-[#9aa0a6] mb-1.5 font-bold">Unit Type</label>
-                                                        <select 
-                                                            value={product.unit}
-                                                            onChange={(e) => updateProduct(product.id, 'unit', e.target.value)}
-                                                            className="w-full bg-[#202124] border border-[#3c4043] text-white text-sm rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors"
-                                                        >
-                                                            {product.availableUnits.map(u => (
-                                                                <option key={u} value={u}>{u}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    
-                                                    {/* Price Override */}
-                                                    <div>
-                                                        <label className="block text-[10px] uppercase tracking-wider text-[#9aa0a6] mb-1.5 font-bold">Custom Selling Price (৳)</label>
-                                                        <input 
-                                                            type="number" 
-                                                            inputMode="numeric"
-                                                            value={product.price}
-                                                            onChange={(e) => updateProduct(product.id, 'price', e.target.value)}
-                                                            className="w-full bg-[#202124] border border-[#3c4043] text-white text-sm rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors"
-                                                            placeholder="Enter price"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                        
-                                        {/* Quantity Selector */}
-                                        <div className="flex items-center border border-[#3c4043] rounded-lg overflow-hidden h-9 mt-0.5 shrink-0">
-                                            <div className="px-3 min-w-[40px] text-center text-[15px] font-medium text-white flex items-center justify-center">
-                                                {product.quantity}
-                                            </div>
-                                            <div className="flex border-l border-[#3c4043]">
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 h-8">
+                                                <span className="text-gray-900 font-bold text-[15px] tracking-tight">
+                                                    ৳{Number(product.price).toLocaleString()}
+                                                </span>
                                                 <button 
-                                                    onClick={() => updateQuantity(product.id, -1)}
-                                                    className="w-9 h-full flex items-center justify-center bg-transparent active:bg-[#202124] transition-colors border-r border-[#3c4043] touch-manipulation"
+                                                    onClick={() => updateProduct(product.id, 'isEditingPrice', true)}
+                                                    className="text-gray-400 active:text-gray-600 bg-gray-50 hover:bg-gray-100 p-1 rounded-md transition-colors touch-manipulation flex items-center justify-center"
+                                                    title="Edit Price"
                                                 >
-                                                    <Minus size={16} strokeWidth={2} className="text-white" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => updateQuantity(product.id, 1)}
-                                                    className="w-9 h-full flex items-center justify-center bg-transparent active:bg-[#202124] transition-colors touch-manipulation"
-                                                >
-                                                    <Plus size={16} strokeWidth={2} className="text-white" />
+                                                    <Pencil size={12} strokeWidth={2.5} />
                                                 </button>
                                             </div>
-                                        </div>
+                                        )}
+
+                                        <span className="text-gray-200 font-light px-0.5">/</span>
+
+                                        <select 
+                                            value={product.unit}
+                                            onChange={(e) => updateProduct(product.id, 'unit', e.target.value)}
+                                            className="bg-white border border-gray-200 text-gray-700 text-[13px] font-medium rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 h-8 cursor-pointer shadow-sm"
+                                        >
+                                            {product.availableUnits.map(u => (
+                                                <option key={u} value={u}>{u}</option>
+                                            ))}
+                                        </select>
                                     </div>
+                                    
+                                    <div className="inline-flex items-center border border-gray-200 rounded-lg overflow-hidden h-9 w-fit mt-1 shadow-sm">
+                                        <div className="w-12 text-center text-[15px] font-bold text-gray-900 flex items-center justify-center bg-white h-full border-r border-gray-200">
+                                            {product.quantity}
+                                        </div>
+                                        <button 
+                                            onClick={() => updateQuantity(product.id, -1)}
+                                            className="w-10 h-full flex items-center justify-center bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors border-r border-gray-200 touch-manipulation"
+                                        >
+                                            <Minus size={16} strokeWidth={2.5} className="text-gray-700" />
+                                        </button>
+                                        <button 
+                                            onClick={() => updateQuantity(product.id, 1)}
+                                            className="w-10 h-full flex items-center justify-center bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+                                        >
+                                            <Plus size={16} strokeWidth={2.5} className="text-gray-700" />
+                                        </button>
+                                    </div>
+
                                 </div>
                             ))}
                         </div>
+                    </div>
+                )}
 
-                        {/* Totals Summary Card */}
-                        <div className="bg-gray-900 text-white p-4 rounded-xl mt-2 flex justify-between items-center shadow-md">
+                {/* STEP 2: SUMMARY VIEW */}
+                {step === 2 && (
+                    <div className="p-4 flex flex-col gap-4">
+                        {/* Summary Block Moved to Top of Step 2 */}
+                        <div className="bg-[#1a1a1a] text-white p-5 rounded-2xl flex justify-between items-center shadow-md">
                             <div>
-                                <p className="text-sm text-gray-300 font-bold mb-0.5">Total Amount</p>
+                                <p className="text-[12px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Total Amount</p>
                                 <p className="text-2xl font-bold tracking-tight">৳{totalAmount.toLocaleString()}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm text-gray-300 font-bold mb-0.5">Items</p>
+                                <p className="text-[12px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Items</p>
                                 <p className="text-xl font-bold">{totalItems}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                            <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-5">
+                                Order Details
+                            </h3>
+                            
+                            <div className="flex flex-col gap-4">
+                                {products.filter(p => p.quantity > 0).map(product => (
+                                    <div key={product.id} className="flex justify-between items-start pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                                        <div className="pr-4">
+                                            <p className="font-bold text-gray-900 text-[15px] mb-1">{product.name}</p>
+                                            <p className="text-[13px] text-gray-500 font-medium">
+                                                {product.quantity} × ৳{Number(product.price).toLocaleString()} / {product.unit}
+                                            </p>
+                                        </div>
+                                        <p className="font-bold text-gray-900 text-[15px] shrink-0">
+                                            ৳{(Number(product.price) * product.quantity).toLocaleString()}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* STEP 2: ADVANCE PAYMENT / SPLIT PAYMENT */}
-                {step === 2 && (
+                {/* STEP 3: ADVANCE PAYMENT / SPLIT PAYMENT */}
+                {step === 3 && (
                     <div className="p-4 flex flex-col gap-4">
-                        {/* Summary Dashboard */}
                         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Payable</p>
@@ -271,7 +322,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                             </div>
                         </div>
 
-                        {/* Full Paid Quick Toggle */}
                         <button
                             onClick={handleFullPaidToggle}
                             className={`w-full py-4 rounded-xl font-bold text-lg border-2 transition-colors touch-manipulation flex items-center justify-center gap-2 shadow-sm ${
@@ -284,7 +334,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                             Mark as Full Paid
                         </button>
 
-                        {/* Error Feedback */}
                         {isOverpaid && (
                             <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg flex items-center gap-2 animate-in fade-in">
                                 <AlertCircle size={18} strokeWidth={2.5} />
@@ -292,7 +341,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                             </div>
                         )}
 
-                        {/* Payment Cards List */}
                         <div className="flex flex-col gap-3 mt-2">
                             {payments.map((payment, index) => (
                                 <div key={payment.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative">
@@ -355,7 +403,6 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                             ))}
                         </div>
 
-                        {/* Add Split Payment Button */}
                         {!isFullPaid && !isOverpaid && dueAmount > 0 && (
                             <button
                                 onClick={addSplitPayment}
@@ -369,34 +416,58 @@ export default function OrderForm({ isEdit = false, initialData, onClose }: Orde
                 )}
             </main>
 
-            {/* FIXED BOTTOM ACTION BAR */}
-            <div className="fixed bottom-14 left-0 right-0 p-4 bg-white border-t border-gray-200 z-30">
-                <div className="max-w-3xl mx-auto w-full">
-                    {step === 1 ? (
+            {/* LIGHT THEME FLOATING ISLAND NAVIGATION (JOINED) */}
+            <div className="fixed bottom-16 right-4 flex items-center z-40 touch-manipulation">
+                <div className="flex bg-white/95 backdrop-blur-md border border-gray-200 rounded-[14px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden">
+                    
+                    {/* Navigation Control (Left Edge) */}
+                    <button
+                        onClick={step === 1 ? onClose : () => setStep((s) => (s - 1) as 1 | 2 | 3)}
+                        className="h-[42px] w-[42px] flex items-center justify-center text-slate-700 active:bg-gray-100 transition-colors border-r border-gray-200"
+                        aria-label={step === 1 ? "Close" : "Back"}
+                    >
+                        <ChevronLeft size={20} strokeWidth={2.5} />
+                    </button>
+
+                    {/* Main Actions (Right Edge) */}
+                    {step === 1 && (
                         <button
                             onClick={() => setStep(2)}
                             disabled={totalItems === 0}
-                            className="w-full py-4 bg-blue-600 active:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 touch-manipulation shadow-md transition-colors"
+                            className="h-[42px] pl-4 pr-3 flex items-center justify-center gap-1 font-bold text-[14px] text-blue-700 active:bg-gray-100 transition-colors disabled:opacity-40"
                         >
-                            Next: Payment <ArrowRight size={20} strokeWidth={3} />
+                            Summary
+                            <ChevronRight size={18} strokeWidth={2.5} className="text-slate-600" />
                         </button>
-                    ) : (
+                    )}
+                    
+                    {step === 2 && (
+                        <button
+                            onClick={() => setStep(3)}
+                            className="h-[42px] pl-4 pr-3 flex items-center justify-center gap-1 font-bold text-[14px] text-blue-700 active:bg-gray-100 transition-colors"
+                        >
+                            Payment
+                            <ChevronRight size={18} strokeWidth={2.5} className="text-slate-600" />
+                        </button>
+                    )}
+                    
+                    {step === 3 && (
                         <button
                             onClick={handleComplete}
                             disabled={isOverpaid}
-                            className={`w-full py-4 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 touch-manipulation shadow-md transition-colors ${
-                                isOverpaid ? 'bg-gray-400' : 'bg-green-600 active:bg-green-700'
+                            className={`h-[42px] pl-4 pr-3 flex items-center justify-center gap-1.5 font-bold text-[14px] transition-colors ${
+                                isOverpaid ? 'text-gray-400' : 'text-blue-700 active:bg-blue-50'
                             }`}
                         >
-                            <CheckCircle size={22} strokeWidth={3} />
-                            Complete Order
+                            Complete
+                            <CheckCircle size={18} strokeWidth={2.5} className={isOverpaid ? 'text-gray-400' : 'text-blue-600'} />
                         </button>
                     )}
                 </div>
             </div>
 
             {/* DYNAMIC SEMANTIC BREADCRUMB */}
-            <div className="z-30 relative">
+            <div className="z-30 relative bg-white border-t border-gray-200">
                 <BottomBreadcrumb currentPage={breadcrumbString} />
             </div>
 
